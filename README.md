@@ -1,6 +1,6 @@
 When We Were Young Festival Spotify Data Analysis
 
-This project is a deep dive into Spotify data related to the artists and songs featured at the When We Were Young 2024 festival. As an attendee of the festival, I'm using this analysis to explore the music trends, popular tracks, and potential surprises that festival-goers might experience. The goal is to provide insights into the festival lineup through data-driven analysis.
+This project is a dive into Spotify data related to the artists and songs featured at the When We Were Young 2024 festival. As an attendee of the festival, I'm using this analysis to explore the music trends, popular tracks, and potential surprises that festival-goers might experience. The goal is to provide insights into the festival lineup through data-driven analysis.
 
 Project Overview
 
