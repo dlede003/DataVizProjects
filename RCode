@@ -1,0 +1,117 @@
+setwd("") #set your own Working Directory
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+Top_Streams <- read_excel("Top25_Streams.xlsx")
+head(Top_Streams)
+
+
+
+Top25_Streams <- Top_Streams %>%
+  arrange(desc(`# Of Streams`))%>% 
+  head(25) #select the top 25 songs with the most # of streams 
+
+
+# Reorder the 'song' factor based on the arranged data
+Top25_Streams$`Song Title` <- factor(Top25_Streams$`Song Title`, levels = rev(Top25_Streams$`Song Title`))
+str(Top25_Streams)
+
+
+#create custom labels for label totals
+custom_labels <- function(x) {
+  rounded <- ifelse(x >= 1e9, round(x / 1e9,1), round(x / 1e6))  # Round to nearest whole number for Millions and to one decial place for Billions
+  suffix <- ifelse(x >= 1e9, "B", "M")  # Choose suffix based on value
+  paste0(rounded, suffix)  # Combine rounded number with suffix
+}
+
+
+
+#create a custom theme for the graph
+ 
+black_theme <- theme(
+  panel.background = element_rect(fill = "black"),  # Black background for plot area
+  plot.background = element_rect(fill = "black"),  # Black background for entire plot
+  axis.text = element_text(color = "white"),  # White text for axis labels
+  axis.title = element_text(color = "white"),  # White text for axis titles
+  plot.title = element_text(size = 14, face = "bold", color = "white",hjust = 0.5),  # White title with bold font
+  legend.background = element_rect(fill = "black"),  # Black background for legend
+  legend.text = element_text(color = "white"),  # White text for legend
+  legend.title = element_text(color = "white"),# White text for legend title
+  panel.grid.major = element_blank(),  # Remove major gridlines
+  panel.grid.minor = element_blank(),
+  plot.caption = element_text(color = "white", hjust = 1, vjust = 1,size = 8),
+  plot.margin = margin(t = 10, r = 50, b = 40, l = 10),
+  legend.position = "right"
+  
+)
+
+# Plot the data
+
+top25_graph<-ggplot(Top25_Streams, aes(x =`Song Title`, y = `# Of Streams`)) + 
+  geom_bar(stat = "identity", position = "dodge",width = .5) + 
+  geom_col(fill="magenta")+ 
+  geom_text(aes(label = custom_labels(`# Of Streams`)), 
+            hjust = 1.1, color = "white", size = 3,family = "Arial", fontface = "bold")+
+  labs(title = "Top 25 Streamed Songs WWWY '24",subtitle = "",
+       x = "Song Title",
+       y = "Total # Of Streams",caption = "Source: Spotify") +
+  scale_y_continuous(labels = custom_labels,expand = c(0, 0)) +
+  scale_x_discrete(expand = c(0, 0)) +
+  black_theme+
+  coord_flip()
+  
+
+
+#install.packages("scales") #scales package to manually edit graph output while saving it as a picture 
+  
+library(scales)
+  
+ggsave("Top25plot.png", top25_graph, width = 20, height = 10, units = "in")
+
+
+
+#Create a graph to plot the Top 15 most streamed albums 
+
+top15_filtered <- Top_Streams %>%
+  filter(!is.na(`Album`) & `Album` != "") #remove albums with no name
+
+format_labels <- function(x) {
+  ifelse(x >= 1e9, 
+         paste0(round(x / 1e9, 2), "B"),   # For billions
+         paste0(round(x / 1e6, 0), "M"))   # For millions
+}
+
+#group songs by album and calculate total number of streams 
+
+album_streams <- top15_filtered %>%
+  group_by(`Album`) %>%
+  summarise(total_streams = sum(`# Of Streams`, na.rm = TRUE)) %>%
+  arrange(desc(total_streams))%>%head(16)
+
+# Merge the `confirmed` status back into album_streams
+album_streams <- left_join(album_streams, top15_filtered %>% select(Album, Confirmed) %>% distinct(), by = "Album")
+
+
+
+
+#create the plot
+
+top15<-ggplot(album_streams, aes(x = reorder(`Album`, total_streams), y = total_streams,fill=`Confirmed`)) +
+  geom_bar(stat = "identity", position = "dodge",width = .5) + 
+  geom_text(aes(label = format_labels(total_streams)), 
+             hjust = -.1, color = "white", size = 3,family = "Arial", fontface = "bold") +
+  scale_fill_manual(values = c("Yes" = "magenta", "No" = "green")) +
+  labs(title = "Top 15 Streamed WWWY '24 Albums",
+       x = "Album",
+       y = "Total # Of Streams",
+       caption = "Source: Spotify ") +
+  scale_y_continuous(labels = format_labels) +
+  black_theme+  # Apply the custom black theme with right-aligned caption
+  coord_flip()  # Ensure clipping is off
+    
+ggsave("Top15Albums.png",top15, width = 14, height = 7)
+
+print(album_streams)
+print(top15_filtered)
