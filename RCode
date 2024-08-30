@@ -115,3 +115,122 @@ ggsave("Top15Albums.png",top15, width = 14, height = 7)
 
 print(album_streams)
 print(top15_filtered)
+
+
+
+
+library(gridExtra)
+
+wwwy_weather <- read_excel("WWWYWeather.xlsx")
+wwwy_weather
+
+wwwy_weather <- wwwy_weather %>%
+  filter(Day != "Three")
+
+wwwy_weather$Temperature<-as.numeric(wwwy_weather$Temperature)
+
+wwwy_weather$Time <- format(wwwy_weather$Time, "%H:%M")
+wwwy_weather
+
+wwwy_weather$Time <- as.POSIXct(wwwy_weather$Time, format = "%H:%M")
+
+wwwy_weather$Temperature_F <- as.numeric(gsub("°F", "", wwwy_weather$Temperature))
+wwwy_weather$Temperature_C <- (wwwy_weather$Temperature_F - 32) * 5 / 9
+
+year_colors <- c("2022" = "green", "2023" = "magenta")
+day_linetypes <- c("One" = "solid", "Two" = "dashed", "Three" = "dotted")
+
+# Set the order for Day factor levels
+wwwy_weather$Day <- factor(wwwy_weather$Day, levels = c("One", "Two", "Three"))
+
+# Plot with custom theme and transparent gridlines
+ggplot(wwwy_weather, aes(x = Time, y = Temperature_F, color = factor(Year), linetype = factor(Day))) +
+  geom_line(size = 1) +  # Use line plot to connect temperature readings over time
+  labs(title = "Temperature (°F) by Time of Day",
+       x = "Time of Day",
+       y = "Temperature (°F)",
+       color = "Year",
+       linetype = "Day") +
+  scale_x_datetime(date_labels = "%I:%M %p", date_breaks = "4 hours") +
+  geom_hline(yintercept = 76.3, linetype = "solid", color = "red")+
+  geom_text(aes(x = min(`Time`), y = 76.3, label = "Avg. Day Temp. for Day 1 (76.3°F)"), 
+            color = "white", vjust = -0.5, hjust = 0)+
+  geom_hline(yintercept = 67.9, linetype = "solid", color = "red")+
+  geom_text(aes(x = min(`Time`), y = 67.9, label = "Avg. Day Temp. for Day 2 (67.9°F)"), 
+            color = "white", vjust = -0.5, hjust = -1.5)+
+  
+  scale_color_manual(values = year_colors) +  # Set colors for Year
+  scale_linetype_manual(values = day_linetypes) +  # Set linetypes for Day
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "black"),  # Black background for plot area
+    plot.background = element_rect(fill = "black"),  # Black background for entire plot
+    axis.text = element_text(color = "white"),  # White text for axis labels
+    axis.title = element_text(color = "white"),  # White text for axis titles
+    plot.title = element_text(size = 14, face = "bold", color = "white", hjust = 0.5),  # White title with bold font
+    legend.background = element_rect(fill = "black"),  # Black background for legend
+    legend.text = element_text(color = "white"),  # White text for legend
+    legend.title = element_text(color = "white"),  # White text for legend title
+    panel.grid.major = element_line(color = "#FFFFFF30", size = 0.2),  # Light white gridlines with transparency
+    panel.grid.minor = element_line(color = "#FFFFFF30", size = 0.2),  # Lighter white minor gridlines with transparency
+    plot.caption = element_text(color = "white", hjust = 1, vjust = 1, size = 8),  # White caption text
+    plot.margin = margin(t = 20, r = 30, b = 20, l = 30),  # Adjust margins as needed
+    legend.key.width = unit(1.5, "cm")  # Adjust the width of legend keys
+  ) +
+  guides(
+    linetype = guide_legend(
+      title = "Day",
+      override.aes = list(color = "white")  # Set linetype legend color to white
+    ),
+    color = guide_legend(
+      title = "Year"
+    )
+  )
+
+# Celsius plot
+ggplot(wwwy_weather, aes(x = Time, y = Temperature_C, color = factor(Year), linetype = factor(Day))) +
+  geom_line(size = 1) +
+  labs(title = "Temperature (°C) by Time of Day",
+       x = "Time of Day",
+       y = "Temperature (°C)",
+       color = "Year",
+       linetype = "Day") +
+  scale_x_datetime(date_labels = "%I:%M %p", date_breaks = "4 hours") +
+  geom_hline(yintercept = 24.6, linetype = "solid", color = "red")+
+  geom_text(aes(x = min(`Time`), y = 24.6, label = "Avg. Day Temp. for Day 1 (24.6°C)"), 
+            color = "white", vjust = -0.5, hjust = 0)+
+  geom_hline(yintercept = 19.9, linetype = "solid", color = "red")+
+  geom_text(aes(x = min(`Time`), y = 19.9, label = "Avg. Day Temp. for Day 2 (19.9°C)"), 
+            color = "white", vjust = -0.5, hjust = -1.5)+
+  
+  scale_color_manual(values = year_colors) +
+  scale_linetype_manual(values = day_linetypes) +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "black"),
+    plot.background = element_rect(fill = "black"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    plot.title = element_text(size = 14, face = "bold", color = "white", hjust = 0.5),
+    legend.background = element_rect(fill = "black"),
+    legend.text = element_text(color = "white"),
+    legend.title = element_text(color = "white"),
+    legend.key = element_rect(fill = "black"),
+    legend.key.size = unit(1, "cm"),
+    legend.key.width = unit(1.5, "cm"),
+    panel.grid.major = element_line(color = "#FFFFFF30", size = 0.2),
+    panel.grid.minor = element_line(color = "#FFFFFF30", size = 0.2),
+    plot.caption = element_text(color = "white", hjust = 1, vjust = 1, size = 8),
+    plot.margin = margin(t = 20, r = 30, b = 20, l = 30)
+  )+
+  guides(
+    linetype = guide_legend(
+      title = "Day",
+      override.aes = list(color = "white")  # Set linetype legend color to white
+    ),
+    color = guide_legend(
+      title = "Year"
+    )
+  )
+#combined_plot<- grid.arrange(plot_F, plot_C, ncol = 2)
+#ggsave("combined_temperature_plot.png", plot = combined_plot, width = 20, height = 8, dpi = 300)
